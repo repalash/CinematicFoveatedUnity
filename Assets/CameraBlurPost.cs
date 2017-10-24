@@ -17,10 +17,10 @@ public class CameraBlurPost : MonoBehaviour {
 		Graphics.Blit (source, destination, material);
 	}
 
-	private void FixedUpdate()
+	private void Update()
 	{
-		speed = Math.Max(-360, Math.Min(360, speed));
-		transform.eulerAngles = new Vector3(0, transform.eulerAngles.y+speed * Time.fixedDeltaTime, 0);
+//		speed = Math.Max(-360, Math.Min(360, speed));
+//		transform.eulerAngles = new Vector3(0, transform.eulerAngles.y+speed * Time.deltaTime, 0);
 	}
 }
 

@@ -1,4 +1,4 @@
-﻿Shader "PersonalPost/Blur1"
+﻿Shader "PersonalPost/Blur"
 {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "white" {}
@@ -7,6 +7,7 @@
 		_MaskFactor ("Mask Factor", Range(1, 2000)) = 500
 		_KernelRadius ("Kernel Radius", Range(1, 60)) = 3
 		_BlurMaskCenter("Blur Mask Center", Vector) = (0.5, 0.5, 0, 0) 
+		_IndicatorColor("Indicator Color", COLOR) = (1.0, 0.0, 0, 0) 
 	}
 	
 	SubShader {
@@ -14,6 +15,7 @@
 			CGPROGRAM
 			#pragma vertex vert_img
 			#pragma fragment frag
+
 			#include "UnityCG.cginc"
 		
 			uniform sampler2D _MainTex;
@@ -22,7 +24,7 @@
 			int _MaskFactor;
 			int _KernelRadius;
 			half4 _BlurMaskCenter; 
-			
+			float4 _IndicatorColor;
 			
 			fixed4 _Blur1(v2f_img i, sampler2D mainTex, float blurAmount, float _coeff_step, int _kernel_radius) : COLOR {
     
@@ -32,15 +34,20 @@
                float remaining=1.0f;
                float coef=1.0;
                float fI=0;
-               for (int j = 0; j < _kernel_radius; j++) {
-                   fI++;
-                   coef*=_coeff_step;
-                   texcol += tex2D(mainTex, float2(i.uv.x, i.uv.y - fI * blurAmount)) * coef;
-                   texcol += tex2D(mainTex, float2(i.uv.x - fI * blurAmount, i.uv.y)) * coef;
-                   texcol += tex2D(mainTex, float2(i.uv.x + fI * blurAmount, i.uv.y)) * coef;
-                   texcol += tex2D(mainTex, float2(i.uv.x, i.uv.y + fI * blurAmount)) * coef;
-                   
-                   remaining-=4*coef;
+               int _flag = 1;
+               for (int j = 0; j < _kernel_radius ; j++) {
+                   if (_flag){
+                       fI++;
+                       coef*=_coeff_step;
+                       texcol += tex2D(mainTex, float2(i.uv.x, i.uv.y - fI * blurAmount)) * coef;
+                       texcol += tex2D(mainTex, float2(i.uv.x - fI * blurAmount, i.uv.y)) * coef;
+                       texcol += tex2D(mainTex, float2(i.uv.x + fI * blurAmount, i.uv.y)) * coef;
+                       texcol += tex2D(mainTex, float2(i.uv.x, i.uv.y + fI * blurAmount)) * coef;
+                       remaining-=4*coef;
+                   }
+                   if(j>_kernel_radius*blurAmount*_MaskFactor){
+                       _flag = 0;
+                   }
                }
                texcol += tex2D(_MainTex, float2(i.uv.x, i.uv.y)) * remaining;
            
@@ -55,10 +62,8 @@
             }
 
 			fixed4 frag (v2f_img i) : COLOR {
-//			    return fixed4(i.uv, 0, 0);
-                float blurAmount = getBlurAmount(half2(_BlurMaskCenter.x, _BlurMaskCenter.y), i.uv) / _MaskFactor;
-//                return fixed4(blurAmount, blurAmount, blurAmount, 1);
-				return _Blur1(i, _MainTex, blurAmount, _CoeffStep, _KernelRadius );
+                float blurAmount = clamp(getBlurAmount(half2(_BlurMaskCenter.x, _BlurMaskCenter.y), i.uv),0.0,1.0);
+				return _Blur1(i, _MainTex, blurAmount / _MaskFactor, _CoeffStep, _KernelRadius ) + _IndicatorColor*(1.0-clamp(blurAmount*10.0, 0.0, 1.0));
 			}
 			
 			ENDCG
