@@ -57,13 +57,12 @@
             float getBlurAmount(half2 centerCoords, half2 pointCoords) {
                 float a = (centerCoords.x - pointCoords.x);
                 float b = (centerCoords.y - pointCoords.y);
-                float dist = sqrt(a*a + b*b);
-                return dist;
+                return sqrt(a*a + b*b);
             }
 
 			fixed4 frag (v2f_img i) : COLOR {
                 float blurAmount = clamp(getBlurAmount(half2(_BlurMaskCenter.x, _BlurMaskCenter.y), i.uv),0.0,1.0);
-				return _Blur1(i, _MainTex, blurAmount / _MaskFactor, _CoeffStep, _KernelRadius ) + _IndicatorColor*(1.0-clamp(blurAmount*10.0, 0.0, 1.0));
+		return _Blur1(i, _MainTex, blurAmount / _MaskFactor, _CoeffStep, _KernelRadius ) + _IndicatorColor*(1.0-clamp(blurAmount*10.0, 0.0, 1.0));
 			}
 			
 			ENDCG
